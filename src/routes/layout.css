@@ -3,3 +3,7 @@
 button:hover {
 	cursor: pointer;
 }
+
+html{
+	background-color: var(--color-zinc-900);
+}

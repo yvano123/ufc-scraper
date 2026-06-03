@@ -1,14 +1,24 @@
-
-import axios from 'axios';
+import { chromium } from 'playwright';
 
 export const GET = async ({ url }: { url: URL }) => {
-  const res = await axios.get(`http://ufcstats.com/statistics/fighters/search?query=${url.searchParams.get("search")}`, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0',
-    },
-  });
+	const browser = await chromium.launch({
+		headless: true
+	});
 
-  return new Response(res.data, {
-    headers: { 'content-type': 'text/html' },
-  });
+	const page = await browser.newPage();
+
+	await page.goto(
+		`http://ufcstats.com/statistics/fighters/search?query=${url.searchParams.get('search')}&page=all`,
+		{
+			waitUntil: 'networkidle'
+		}
+	);
+
+	const html = await page.content();
+
+	await browser.close();
+
+	return new Response(html, {
+		headers: { 'content-type': 'text/html' }
+	});
 };
