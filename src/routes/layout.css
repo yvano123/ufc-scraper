@@ -4,6 +4,8 @@ button:hover {
 	cursor: pointer;
 }
 
-html{
-	background-color: var(--color-zinc-900);
+html {
+	background-color: var(--color-zinc-800);
+	color: white;
+	overflow-x: hidden;
 }

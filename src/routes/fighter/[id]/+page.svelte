@@ -1,122 +1,111 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	import { parse, HTMLElement } from 'node-html-parser';
-	import { Fighter, ProfileMatchItem } from '$lib/classes/Fighter.js';
+	import { Fighter } from '$lib/classes/Fighter.js';
+	import moment from 'moment';
+	import axios from 'axios';
+	import { RefreshCw } from '@lucide/svelte';
+	import { Jellyfish } from 'svelte-loading-spinners';
+	import HeaderBar from '$lib/Components/HeaderBar.svelte';
 
 	let { params } = $props();
+	let loading = $state(false);
 
 	let fighter = $state<Fighter | undefined>(undefined);
 
-	let root: HTMLElement | undefined = undefined;
-
 	onMount(async () => {
-		const res = await fetch(`/api/fighter?id=${params.id}`);
+		loading = true;
+		const res = await axios.get(`https://localhost:7130/api/fighter/${params.id}`);
 
-		root = parse(await res.text());
-
-		getFighterData();
-		getMatches();
+		fighter = res.data as Fighter;
+		loading = false;
 	});
 
-	function getFighterData() {
-		var page = root!.querySelector('.b-fight-details')!;
-		const containerChildren = page.children[0].children[0].children;
+	async function scrapeFighter() {
+		loading = true;
+		const res = await axios.get(`https://localhost:7130/api/fighter/scrape/${fighter?.id}`);
 
-		fighter = new Fighter();
-
-		fighter.Name = '';
-		fighter.height = containerChildren[0].text
-			.removeReturnCharacters()
-			.removeWhitespace()
-			.getStat();
-		fighter.weight = containerChildren[1].text
-			.removeReturnCharacters()
-			.removeWhitespace()
-			.getStat();
-		fighter.reach = containerChildren[2].text.removeReturnCharacters().removeWhitespace().getStat();
-		fighter.stance = containerChildren[3].text
-			.removeReturnCharacters()
-			.removeWhitespace()
-			.getStat();
-
-		fighter.dateOfBirth = containerChildren[4].text.removeReturnCharacters().removeWhitespace();
-		fighter.Name = dataByclass('b-content__title-highlight');
-		fighter.record = dataByclass('b-content__title-record').getStat();
-		fighter.nickname = dataByclass('b-content__Nickname');
+		fighter = res.data as Fighter;
+		loading = false;
 	}
-
-	function getMatches() {
-		const matchParent = root?.getElementsByTagName('tbody')[0];
-		matchParent?.children.forEach((fight, index) => {
-			if (index == 0) return;
-
-			let match = new ProfileMatchItem();
-			match.result = fight.querySelector('.b-flag__text')?.innerText ?? 'Unknown';
-
-			match.opponentName = fight.children[1].children[1].innerText
-				.removeReturnCharacters()
-				.removeWhitespace();
-
-			fighter?.matches.push(match);
-		});
-	}
-
-	function dataByclass(className: string) {
-		return root!
-			.querySelector('.' + className)!
-			.innerText.removeWhitespace()
-			.removeReturnCharacters();
-	}
-
-	String.prototype.removeWhitespace = function () {
-		const str = String(this);
-
-		return str.replaceAll('  ', '');
-	};
-	String.prototype.removeReturnCharacters = function () {
-		const str = String(this);
-
-		return str.replaceAll('\n', '');
-	};
-
-	String.prototype.getStat = function () {
-		const str = String(this);
-
-		return str.split(':')[1].replace(' ', '');
-	};
 </script>
 
-<h1 class="text-2xl">{fighter?.Name} {fighter?.record}</h1>
-<h1 class="text-xl">{fighter?.nickname}</h1>
-<p>Height: {fighter?.height}</p>
-<p>Weight: {fighter?.weight}</p>
-<p>Reach: {fighter?.reach}</p>
-<p>Stance: {fighter?.stance}</p>
-
-<div class="flex flex-col gap-1">
-	<div class=" mb-1 flex flex-row items-center gap-5 bg-black px-3 text-white">
-		<p class="w-10 text-center">W/L</p>
-		<p>Fighter</p>
-		<p>Test</p>
-		<p>Test</p>
+<HeaderBar navButton />
+{#if loading}
+	<div class="flex h-screen w-full items-center justify-center">
+		<Jellyfish duration="1.5s" color="white" />
 	</div>
-	{#each fighter?.matches as match, index}
-		<div
-			class="flex flex-row items-center gap-5 p-2 px-3"
-			class:bg-gray-300={index % 2 == 0}
-			class:bg-white={index % 2 == 1}
-		>
-			<p
-				class="w-10 rounded-full bg-gray-100 px-2 text-center"
-				class:bg-green-400={match.result == 'win'}
-			>
-				{match.result}
-			</p>
-			<div class="flex flex-col">
-				<p>{fighter?.Name}</p>
-				<p>{match.opponentName}</p>
+{:else}
+	<div class=" px-3">
+		<div class="flex flex-row items-center gap-4">
+			<h1 class="text-2xl">
+				{fighter?.firstName}
+				{fighter?.lastName}
+				{fighter?.wins}-{fighter?.losses}-{fighter?.draws}
+				({fighter?.noContests} NC)
+			</h1>
+			<div class="flex items-center gap-1">
+				<button
+					onclick={scrapeFighter}
+					class="group relative items-center rounded-full bg-zinc-700 p-1"
+					><RefreshCw size={18} />
+					<div class="scale-0 transition-all group-hover:scale-100">
+						<span
+							class="absolute z-20 w-max -translate-x-1/2 translate-y-3 self-center rounded-md p-1 text-xs dark:bg-zinc-700 dark:text-white"
+							>rescrape</span
+						>
+						<!-- Arrow -->
+						<div
+							class="absolute aspect-square w-4 translate-y-2 rotate-45 rounded-xs dark:bg-zinc-700"
+						></div>
+					</div>
+				</button>
+				<i>Updated {moment(fighter?.updatedAt).fromNow()}</i>
 			</div>
 		</div>
-	{/each}
-</div>
+
+		<h1 class="text-xl">{fighter?.nickname}</h1>
+		<p>Height: {fighter?.height}</p>
+		<p>Weight: {fighter?.weight}</p>
+		<p>Reach: {fighter?.reach}</p>
+		<p>Stance: {fighter?.stance}</p>
+
+		<div class="flex flex-col gap-1 border-2 border-zinc-900">
+			<div class=" mb-1 flex flex-row items-center gap-5 bg-black px-3">
+				<p class="w-10 text-center">W/L</p>
+				<p>Fighter</p>
+				<p>Test</p>
+				<p>Test</p>
+			</div>
+			{#each fighter?.fights as match, index}
+				<a
+					href="/fights/{match.fightDetailsId}"
+					class="flex flex-row items-center gap-5 p-2 px-3"
+					class:bg-zinc-800={index % 2 == 0}
+					class:bg-zinc-700={index % 2 == 1}
+				>
+					<p
+						class="w-13 rounded-full px-2 text-center"
+						class:bg-green-400={match.result == 0}
+						class:bg-red-400={match.result == 1}
+						class:bg-zinc-800={match.result > 1}
+					>
+						{match.result == 0
+							? 'Win'
+							: match.result == 1
+								? 'Loss'
+								: match.result == 2
+									? 'Draw'
+									: match.result == 3
+										? 'NC'
+										: '?'}
+					</p>
+					<div class="flex flex-col">
+						<p>{fighter?.firstName} {fighter?.lastName}</p>
+						<p>{match.opponentName}</p>
+					</div>
+				</a>
+			{/each}
+		</div>
+	</div>
+{/if}

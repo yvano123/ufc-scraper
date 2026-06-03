@@ -1,18 +1,24 @@
-export class Fighter{
-    Name!: string;
-    nickname?: string;
-    height!: string;
-    weight!: string;
-    reach!: string;
-    stance?: string;
-    dateOfBirth?: string
-    record?:string
-    wins!: number;
-    url!: string
-    matches: Array<ProfileMatchItem> = [];
+export class Fighter {
+	id!: string;
+	firstName!: string;
+	lastName!: string;
+	nickname?: string;
+	height!: string;
+	weight!: string;
+	reach!: string;
+	stance?: string;
+	dateOfBirth?: string;
+	record?: string;
+	wins!: number;
+	losses!: number;
+	draws!: number;
+	noContests!: number;
+	updatedAt!: Date;
+	fights: Array<ProfileFightItem> = [];
 }
-export class ProfileMatchItem{
-    opponentName!: string;
-    result!: string;
-    method!: string;
+export class ProfileFightItem {
+	opponentName!: string;
+	result!: number;
+	fightDetailsId!: string;
+	// method!: string;
 }

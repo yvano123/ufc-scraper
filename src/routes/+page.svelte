@@ -2,21 +2,26 @@
 	import { FighterListItem } from '$lib/classes/FighterListItem';
 	import axios from 'axios';
 	import { Crown } from '@lucide/svelte';
-	import { Diamonds, Rainbow } from 'svelte-loading-spinners';
+	import { Jellyfish } from 'svelte-loading-spinners';
+	import HeaderBar from '$lib/Components/HeaderBar.svelte';
 
 	let search = $state('');
 	let lastSearch = '';
+	let loading = $state(false);
 
 	let fighters = $state<Array<FighterListItem>>();
 	async function fetchData() {
 		const res = await axios.get(`https://localhost:7130/api/fighter/search?search=${search}`);
 		fighters = res.data as Array<FighterListItem>;
+		loading = false;
 	}
 	async function scrapeData() {
+		loading = true;
 		const res = await axios.get(
 			`https://localhost:7130/api/fighter/search/scrape?search=${search}`
 		);
 		fighters = res.data as Array<FighterListItem>;
+		loading = false;
 	}
 
 	let timer: number;
@@ -26,12 +31,14 @@
 			if (search == '') {
 				fighters = undefined;
 			} else {
+				loading = true;
 				await fetchData();
 			}
 		}, 150);
 	};
 </script>
 
+<HeaderBar />
 <div class="flex h-screen flex-col items-center justify-center gap-3">
 	<input
 		class="w-3/10 rounded-2xl bg-zinc-700 p-2 px-3 text-2xl text-white placeholder-zinc-500"
@@ -39,9 +46,11 @@
 		type="text"
 		bind:value={search}
 		onkeyup={() => fetchOnDebounce()}
-	/><Diamonds />
+	/>
 	<div class="flex h-4/5 w-screen justify-center">
-		{#if fighters}
+		{#if loading}
+			<Jellyfish duration="1.5s" color="white" />
+		{:else if fighters}
 			<div class="flex w-3/10 flex-col gap-1.5 rounded-2xl p-3">
 				{#each fighters as fighter}
 					<div class="flex flex-col rounded-xl bg-zinc-600 p-2 px-3">
@@ -63,7 +72,7 @@
 
 				<div class="flex flex-col items-center justify-center">
 					<p class="text-white">Your fighter not listed?</p>
-					<button class="bg-white" onclick={scrapeData}> Scrape now</button>
+					<button class="rounded-2xl bg-zinc-700 p-2 px-3" onclick={scrapeData}> Scrape now</button>
 				</div>
 			</div>
 		{/if}
