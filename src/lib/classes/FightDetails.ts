@@ -9,7 +9,10 @@ export class FightDetails {
 	timeSeconds!: number;
 
 	name1!: string;
-	id1!: string;
+	nickname1!: string;
+	id1!: string; // Guid -> string
+	matchResult1!: number;
+
 	knockDowns1!: number;
 	sigStrikesThrown1!: number;
 	sigStrikesLanded1!: number;
@@ -21,12 +24,14 @@ export class FightDetails {
 	reversals1!: number;
 	controlMinutes1!: number;
 	controlSeconds1!: number;
+
 	headStrikesThrown1!: number;
 	headStrikesLanded1!: number;
 	bodyStrikesThrown1!: number;
 	bodyStrikesLanded1!: number;
 	legStrikesThrown1!: number;
 	legStrikesLanded1!: number;
+
 	distanceStrikesThrown1!: number;
 	distanceStrikesLanded1!: number;
 	clinchStrikesThrown1!: number;
@@ -36,6 +41,9 @@ export class FightDetails {
 
 	name2!: string;
 	id2!: string;
+	nickname2!: string;
+	matchResult2!: number;
+
 	knockDowns2!: number;
 	sigStrikesThrown2!: number;
 	sigStrikesLanded2!: number;
@@ -47,12 +55,14 @@ export class FightDetails {
 	reversals2!: number;
 	controlMinutes2!: number;
 	controlSeconds2!: number;
+
 	headStrikesThrown2!: number;
 	headStrikesLanded2!: number;
 	bodyStrikesThrown2!: number;
 	bodyStrikesLanded2!: number;
 	legStrikesThrown2!: number;
 	legStrikesLanded2!: number;
+
 	distanceStrikesThrown2!: number;
 	distanceStrikesLanded2!: number;
 	clinchStrikesThrown2!: number;

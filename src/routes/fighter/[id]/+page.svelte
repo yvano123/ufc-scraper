@@ -3,21 +3,33 @@
 
 	import { Fighter } from '$lib/classes/Fighter.js';
 	import moment from 'moment';
-	import axios from 'axios';
+	import axios, { AxiosError } from 'axios';
 	import { RefreshCw } from '@lucide/svelte';
 	import { Jellyfish } from 'svelte-loading-spinners';
 	import HeaderBar from '$lib/Components/HeaderBar.svelte';
+	import { error } from '@sveltejs/kit';
 
 	let { params } = $props();
-	let loading = $state(false);
+	let loading = $state(true);
 
 	let fighter = $state<Fighter | undefined>(undefined);
 
 	onMount(async () => {
 		loading = true;
-		const res = await axios.get(`https://localhost:7130/api/fighter/${params.id}`);
+		try {
+			const res = await axios.get(`https://localhost:7130/api/fighter/${params.id}`);
 
-		fighter = res.data as Fighter;
+			fighter = res.data as Fighter;
+			if (fighter.fights.length == 0) {
+				await scrapeFighter();
+			}
+		} catch (e: any) {
+			const err = e as AxiosError;
+			console.log(err.status);
+
+			if (err.status == 404) navigation.navigate('/fighter/404');
+		}
+
 		loading = false;
 	});
 
@@ -80,15 +92,17 @@
 			{#each fighter?.fights as match, index}
 				<a
 					href="/fights/{match.fightDetailsId}"
+					class:pointer-events-none={match.result == 5}
 					class="flex flex-row items-center gap-5 p-2 px-3"
-					class:bg-zinc-800={index % 2 == 0}
-					class:bg-zinc-700={index % 2 == 1}
+					class:bg-zinc-800={index % 2 == 1}
+					class:bg-zinc-700={index % 2 == 0}
 				>
 					<p
 						class="w-13 rounded-full px-2 text-center"
 						class:bg-green-400={match.result == 0}
 						class:bg-red-400={match.result == 1}
-						class:bg-zinc-800={match.result > 1}
+						class:bg-olive-400={match.result > 1 && match.result != 5}
+						class:bg-purple-400={match.result == 5}
 					>
 						{match.result == 0
 							? 'Win'
@@ -98,7 +112,9 @@
 									? 'Draw'
 									: match.result == 3
 										? 'NC'
-										: '?'}
+										: match.result == 5
+											? 'Next'
+											: '?'}
 					</p>
 					<div class="flex flex-col">
 						<p>{fighter?.firstName} {fighter?.lastName}</p>
